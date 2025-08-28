@@ -47,3 +47,6 @@ __pycache__
 cluster_scripts
 internal
 *TestSamples*
+
+DECA/my_new_env
+DECA/environment
