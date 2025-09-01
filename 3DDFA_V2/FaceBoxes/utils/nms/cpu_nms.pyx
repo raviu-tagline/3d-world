@@ -22,11 +22,11 @@ def cpu_nms(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh):
     cdef np.ndarray[np.float32_t, ndim=1] scores = dets[:, 4]
 
     cdef np.ndarray[np.float32_t, ndim=1] areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-    cdef np.ndarray[np.int_t, ndim=1] order = scores.argsort()[::-1]
+    cdef np.ndarray[np.intp_t, ndim=1] order = scores.argsort()[::-1]
 
     cdef int ndets = dets.shape[0]
-    cdef np.ndarray[np.int_t, ndim=1] suppressed = \
-            np.zeros((ndets), dtype=np.int)
+    cdef np.ndarray[np.intp_t, ndim=1] suppressed = \
+                 np.zeros((ndets), dtype=int)
 
     # nominal indices
     cdef int _i, _j
@@ -87,21 +87,21 @@ def cpu_soft_nms(np.ndarray[float, ndim=2] boxes, float sigma=0.5, float Nt=0.3,
         ts = boxes[i,4]
 
         pos = i + 1
-	# get max box
+        # get max box
         while pos < N:
             if maxscore < boxes[pos, 4]:
                 maxscore = boxes[pos, 4]
                 maxpos = pos
             pos = pos + 1
 
-	# add max box as a detection 
+        # add max box as a detection
         boxes[i,0] = boxes[maxpos,0]
         boxes[i,1] = boxes[maxpos,1]
         boxes[i,2] = boxes[maxpos,2]
         boxes[i,3] = boxes[maxpos,3]
         boxes[i,4] = boxes[maxpos,4]
 
-	# swap ith box with position of max box
+        # swap ith box with position of max box
         boxes[maxpos,0] = tx1
         boxes[maxpos,1] = ty1
         boxes[maxpos,2] = tx2
@@ -115,7 +115,7 @@ def cpu_soft_nms(np.ndarray[float, ndim=2] boxes, float sigma=0.5, float Nt=0.3,
         ts = boxes[i,4]
 
         pos = i + 1
-	# NMS iterations, note that N changes if detection boxes fall below threshold
+        # NMS iterations, note that N changes if detection boxes fall below threshold
         while pos < N:
             x1 = boxes[pos, 0]
             y1 = boxes[pos, 1]
@@ -132,22 +132,22 @@ def cpu_soft_nms(np.ndarray[float, ndim=2] boxes, float sigma=0.5, float Nt=0.3,
                     ov = iw * ih / ua #iou between max box and detection box
 
                     if method == 1: # linear
-                        if ov > Nt: 
+                        if ov > Nt:
                             weight = 1 - ov
                         else:
                             weight = 1
                     elif method == 2: # gaussian
                         weight = np.exp(-(ov * ov)/sigma)
                     else: # original NMS
-                        if ov > Nt: 
+                        if ov > Nt:
                             weight = 0
                         else:
                             weight = 1
 
                     boxes[pos, 4] = weight*boxes[pos, 4]
-		    
-		    # if box score falls below threshold, discard the box by swapping with last box
-		    # update N
+    
+                    # if box score falls below threshold, discard the box by swapping with last box
+                    # update N
                     if boxes[pos, 4] < threshold:
                         boxes[pos,0] = boxes[N-1, 0]
                         boxes[pos,1] = boxes[N-1, 1]
